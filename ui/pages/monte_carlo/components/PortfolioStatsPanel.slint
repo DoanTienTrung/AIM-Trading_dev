@@ -1,0 +1,180 @@
+import {
+    GroupBox, GridBox, ScrollView,
+    VerticalBox
+} from "std-widgets.slint";
+
+import { PortfolioStatsData } from "../monte_carlo_types.slint";
+import { Theme } from "../monte_carlo_theme.slint";
+
+export component PortfolioStatsPanel {
+    in property <PortfolioStatsData> stats;
+
+    Rectangle {
+        background: #2d3748; 
+        border-radius: 8px;
+        horizontal-stretch: 1;
+
+        ScrollView {  
+            vertical-stretch: 1;
+            VerticalBox {
+                spacing: 10px;
+                padding: 10px;
+
+                Text {
+                    text: "PORTFOLIO SIMULATION RESULTS";
+                    font-size: 20px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    color: #2196f3;
+                }
+
+                // Execution Info
+                GroupBox {
+                    title: "Execution Info";
+                    GridBox {
+                        Row {
+                            Text { text: "Execution Time:"; font-weight: 600; color: white; }
+                            Text { text: stats.exec-time; color: white; }
+                        }
+                        Row {
+                            Text { text: "Paths Simulated:"; font-weight: 600; color: white; }
+                            Text { text: stats.paths; color: white; }
+                        }
+                        Row {
+                            Text { text: "Horizon:"; font-weight: 600; color: white; }
+                            Text { text: stats.horizon + " days"; color: white; }
+                        }
+                    }
+                }
+
+                // Portfolio Performance
+                GroupBox {
+                    title: "═══ PORTFOLIO PERFORMANCE ═══";
+                    GridBox {
+                        Row {
+                            Text { text: "Initial Capital:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.initial-capital; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Mean Final Value:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.mean-final-value; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Median Final Value:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.median-final-value; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Std Dev:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.std-dev-value; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Best Case:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.best-case; color: #4caf50; font-weight: 700; font-size: 14px; }
+                        }
+                        Row {
+                            Text { text: "Worst Case:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.worst-case; color: #f44336; font-weight: 700; font-size: 14px; }
+                        }
+                    }
+                }
+
+                // Return Statistics
+                GroupBox {
+                    title: "═══ RETURN STATISTICS ═══";
+                    GridBox {
+                        Row {
+                            Text { text: "Mean Return:"; font-weight: 600; color: white; }
+                            Text { text: stats.mean-return + "%"; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Median Return:"; font-weight: 600; color: white; }
+                            Text { text: stats.median-return + "%"; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "Std Dev Return:"; font-weight: 600; color: white; }
+                            Text { text: stats.std-return + "%"; font-size: 14px; color: white; }
+                        }
+                    }
+                }
+
+                // Probability Analysis
+                GroupBox {
+                    title: "═══ PROBABILITY ANALYSIS ═══";
+                    GridBox {
+                        Row {
+                            Text { text: "Probability of Profit:"; font-weight: 600; color: white; }
+                            Text {
+                                text: stats.prob-profit + "%";
+                                color: #4caf50;
+                                font-weight: 700;
+                                font-size: 14px;
+                            }
+                        }
+                        Row {
+                            Text { text: "  └─ Mean Profit:"; color: white; }
+                            Text { text: "+" + stats.mean-profit + "%"; color: #66bb6a; font-size: 14px; }
+                        }
+                        Row {
+                            Text { text: "Probability of Loss:"; font-weight: 600; color: white; }
+                            Text {
+                                text: stats.prob-loss + "%";
+                                color: #f44336;
+                                font-weight: 700;
+                                font-size: 14px;
+                            }
+                        }
+                        Row {
+                            Text { text: "  └─ Mean Loss:"; color: white; }
+                            Text { text: stats.mean-loss + "%"; color: #ef5350; font-size: 14px; }
+                        }
+                    }
+                }
+
+                // Risk Metrics
+                GroupBox {
+                    title: "═══ RISK METRICS ═══";
+                    GridBox {
+                        Row {
+                            Text { text: "VaR 95%:"; font-weight: 600; color: white; }
+                            Text { text: "$" + stats.var95; color: #ff9800; font-weight: 700; font-size: 14px; }
+                        }
+                        Row {
+                            Text { text: "Max Drawdown:"; font-weight: 600; color: white; }
+                            Text {
+                                text: stats.max-drawdown + "%";
+                                color: #f44336;
+                                font-weight: 700;
+                                font-size: 14px;
+                            }
+                        }
+                    }
+                }
+
+                // Percentiles
+                GroupBox {
+                    title: "═══ PERCENTILES ═══";
+                    GridBox {
+                        Row {
+                            Text { text: "P5 (5th percentile):"; font-weight: 600; color: white; }
+                            Text { text: stats.p5 + "%"; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "P25 (25th percentile):"; font-weight: 600; color: white; }
+                            Text { text: stats.p25 + "%"; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "P75 (75th percentile):"; font-weight: 600; color: white; }
+                            Text { text: stats.p75 + "%"; font-size: 14px; color: white; }
+                        }
+                        Row {
+                            Text { text: "P95 (95th percentile):"; font-weight: 600; color: white; }
+                            Text { text: stats.p95 + "%"; font-size: 14px; color: white; }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+

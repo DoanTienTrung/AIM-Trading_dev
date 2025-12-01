@@ -1,0 +1,97 @@
+import { SimParams, SimStats, TickerFormData, TickerItem, PortfolioStatsData, TickerStatsData } from "monte_carlo_types.slint";
+
+export global MonteCarloGlobal {
+    // State cho Single Ticker mode
+    in-out property <[string]> ticker-list: [];
+    in-out property <string> selected-ticker: "";
+    in-out property <string> date-range: "Date range: N/A";
+    in-out property <string> record-count: "Record count: 0";
+    in-out property <float> initial-price: 150.0;
+    in-out property <float> mu: 0.0002;
+    in-out property <float> sigma: 0.015;
+    in-out property <SimStats> stats: {
+    mean: 0.0,
+    std_dev: 0.0,
+    median: 0.0,
+    p5: 0.0,
+    p25: 0.0,
+    p75: 0.0,
+    p95: 0.0,
+    var95: 0.0,
+    sharpe-ratio: 0.0,
+    best-case: 0.0,
+    worst-case: 0.0,
+    max-drawdown: 0.0,
+    };
+    in-out property <image> price-chart;
+    in-out property <image> hist-chart;
+    in-out property <string> exec-time: "0 ms";
+
+    // Callbacks cho Single Ticker
+    callback load-csv-pressed();
+    callback select-ticker-changed(string);
+    callback estimate-params-pressed();
+    callback run-simulation-pressed(SimParams);
+    callback export-summary-pressed();
+    callback export-charts-pressed();
+    callback save-setup-pressed();
+    callback load-setup-pressed();
+
+    // State cho Portfolio mode
+    in-out property <TickerFormData> portfolio-form: {
+    ticker-name: "",
+    initial-price: 150.0,
+    weight: 25.0,
+    stop-loss: 135.0,
+    target: 180.0,
+    enable-stop-loss: true,
+    enable-target: true,
+    model-type: "GBM",
+    mu: 0.0002,
+    sigma: 0.015,
+    lambda: 2.0,
+    mu-j: -0.02,
+    sigma-j: 0.05,
+    omega: 0.00001,
+    alpha: 0.1,
+    beta: 0.85,
+    };
+    in-out property <[TickerItem]> portfolio-tickers: [];
+    in-out property <float> portfolio-total-weight: 0.0;
+    in-out property <string> portfolio-validation-message: "";
+    in-out property <PortfolioStatsData> portfolio-stats: {
+    exec-time: "0.0 ms",
+    paths: 0,
+    horizon: 0,
+    initial-capital: 0.0,
+    mean-final-value: 0.0,
+    median-final-value: 0.0,
+    std-dev-value: 0.0,
+    best-case: 0.0,
+    worst-case: 0.0,
+    mean-return: 0.0,
+    median-return: 0.0,
+    std-return: 0.0,
+    prob-profit: 0.0,
+    prob-loss: 0.0,
+    mean-profit: 0.0,
+    mean-loss: 0.0,
+    var95: 0.0,
+    max-drawdown: 0.0,
+    p5: 0.0,
+    p25: 0.0,
+    p75: 0.0,
+    p95: 0.0,
+    };
+    in-out property <[TickerStatsData]> ticker-stats-list: [];
+
+    // Callbacks cho Portfolio
+    callback ticker-selected-for-portfolio(string);
+    callback estimate-params-for-portfolio();
+    callback add-ticker-to-portfolio();
+    callback update-ticker-field(int, string, string);
+    callback update-ticker-weight(int, float);
+    callback remove-ticker-from-portfolio(int);
+    callback auto-balance-portfolio();
+    callback run-portfolio-simulation();
+}

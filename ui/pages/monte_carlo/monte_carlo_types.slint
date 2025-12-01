@@ -1,0 +1,131 @@
+// Shared UI types (entities / DTOs) for the Monte Carlo simulator
+
+export struct SimParams {
+    initial_price: float,
+    horizon: int,
+    num_paths: int,
+    mu: float,
+    sigma: float,
+    seed: int,
+    use_antithetic: bool,
+    dt: int,
+    model_type: string,
+    // Jump Diffusion
+    lambda: float,
+    mu_j: float,
+    sigma_j: float,
+    // GARCH
+    omega: float,
+    alpha: float,
+    beta: float,
+}
+
+export struct SimStats {
+    mean: float,
+    std_dev: float,
+    median: float,
+    p5: float,
+    p25: float,
+    p75: float,
+    p95: float,
+    var95: float,
+    sharpe-ratio: float,
+    best-case: float,
+    worst-case: float,
+    max-drawdown: float,
+}
+
+export struct TickerFormData {
+    ticker-name: string,
+    initial-price: float,
+    weight: float,
+    stop-loss: float,
+    target: float,
+    enable-stop-loss: bool,
+    enable-target: bool,
+    model-type: string,
+    // GBM / Bootstrap
+    mu: float,
+    sigma: float,
+    // Jump Diffusion
+    lambda: float,
+    mu-j: float,
+    sigma-j: float,
+    // GARCH
+    omega: float,
+    alpha: float,
+    beta: float,
+}
+
+export struct TickerItem {
+    symbol: string,
+    weight: float,
+    initial-price: float,
+    stop-loss: string,
+    target: string,
+    model-type: string,
+}
+
+export struct PortfolioStatsData {
+    exec-time: string,
+    paths: int,
+    horizon: int,
+
+    initial-capital: float,
+    mean-final-value: float,
+    median-final-value: float,
+    std-dev-value: float,
+    best-case: float,
+    worst-case: float,
+
+    mean-return: float,
+    median-return: float,
+    std-return: float,
+
+    prob-profit: float,
+    prob-loss: float,
+    mean-profit: float,
+    mean-loss: float,
+
+    var95: float,
+    max-drawdown: float,
+
+    p5: float,
+    p25: float,
+    p75: float,
+    p95: float,
+}
+
+export struct TickerStatsData {
+    symbol: string,
+    weight: float,
+    initial-price: float,
+    capital-allocated: float,
+    shares: float,
+    model-type: string,
+    model-params: string,
+
+    mean-final-price: float,
+    median-final-price: float,
+    std-dev: float,
+    best-price: float,
+    worst-price: float,
+
+    stop-loss: float,
+    prob-hit-sl: float,
+    num-paths-hit-sl: int,
+    avg-time-to-sl: float,
+
+    target: float,
+    prob-hit-target: float,
+    num-paths-hit-target: int,
+    avg-time-to-target: float,
+
+    p5: float,
+    p25: float,
+    p50: float,
+    p75: float,
+    p95: float,
+}
+
+

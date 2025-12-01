@@ -1,0 +1,167 @@
+import {
+    Button, ScrollView,
+    VerticalBox, HorizontalBox, LineEdit, SpinBox, ComboBox
+} from "std-widgets.slint";
+
+import { Theme } from "../monte_carlo_theme.slint";
+
+import { TickerItem } from "../monte_carlo_types.slint";
+
+export component PortfolioList {
+    in-out property <[TickerItem]> tickers;
+    in-out property <float> total-weight;
+    in-out property <string> validation-message;
+    callback update-ticker-field(int, string, string);
+    callback update-ticker-weight(int, float);
+    callback remove-ticker(int);
+    callback auto-balance();
+    callback run-simulation();
+
+    Rectangle {
+        border-radius: 8px;
+        background: Theme.panel-background;
+
+        VerticalBox {
+            spacing: 8px;
+
+            // Header
+            HorizontalBox {
+                padding: 6px;
+                spacing: 8px;
+                Text { text: "Ticker"; width: 60px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Weight"; width: 60px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Price"; width: 70px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Stop Loss"; width: 80px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Target"; width: 80px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Model"; width: 100px; font-weight: 700; color: Theme.text-primary; }
+                Text { text: "Actions"; width: 80px; font-weight: 700; color: Theme.text-primary; }
+            }
+
+            // Content
+            ScrollView {
+                vertical-stretch: 1;
+                VerticalBox {
+                    spacing: 4px;
+                    if tickers.length == 0: VerticalBox {
+                        alignment: center;
+                        padding: 40px;
+                        Text { text: "No tickers added yet"; font-size: 16px; color: #a0a0a0; }
+                        Text { text: "Add tickers using the form on the left"; font-size: 12px; color: #a0a0a0; }
+                    }
+
+                    for ticker[index] in tickers: Rectangle {
+                        background: Theme.card-background;
+                        private property <float> edit-weight: ticker.weight;
+                        private property <string> edit-price: ticker.initial-price;
+                        private property <string> edit-stop-loss: ticker.stop-loss == "None" ? "" : ticker.stop-loss;
+                        private property <string> edit-target: ticker.target == "None" ? "" : ticker.target;
+                        private property <string> edit-model: ticker.model-type;
+                        HorizontalBox {
+                            spacing: 5px;
+                            padding: 5px;
+                            
+                            // Ticker symbol is read-only
+                            Text {
+                                text: ticker.symbol;
+                                width: 60px;
+                                height: Theme.control-height;
+                                vertical-alignment: center;
+                                color: Theme.text-primary;
+                            }
+                            
+                            // Other fields are editable directly
+                            SpinBox {
+                                value: edit-weight;
+                                minimum: 0;
+                                maximum: 100;
+                                width: 60px;
+                                height: Theme.control-height;
+                                edited(val) => {
+                                    edit-weight = val;
+                                    update-ticker-weight(index, val);
+                                }
+                            }
+                            LineEdit {
+                                text <=> edit-price;
+                                width: 70px;
+                                height: Theme.control-height;
+                                edited(text) => {
+                                    update-ticker-field(index, "price", text);
+                                }
+                            }
+                            LineEdit {
+                                text <=> edit-stop-loss;
+                                width: 80px;
+                                height: Theme.control-height;
+                                edited(text) => {
+                                    update-ticker-field(index, "stop-loss", text);
+                                }
+                            }
+                            LineEdit {
+                                text <=> edit-target;
+                                width: 80px;
+                                height: Theme.control-height;
+                                edited(text) => {
+                                    update-ticker-field(index, "target", text);
+                                }
+                            }
+                            ComboBox {
+                                model: ["GBM", "Bootstrap", "JumpDiffusion", "GARCH"];
+                                current-value <=> edit-model;
+                                width: 100px;
+                                height: Theme.control-height;
+                                selected(selected) => {
+                                    update-ticker-field(index, "model", selected);
+                                }
+                            }
+                            Button {
+                                text: "🗑️";
+                                width: 55px;
+                                clicked => { remove-ticker(index); }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Footer – total weight & actions
+            Rectangle { height: 2px; background: #444; }
+
+            HorizontalBox {
+                spacing: 10px;
+                padding: 8px;
+                Text { text: "Total Weight:"; font-weight: 700; color: Theme.text-primary; }
+                Text {
+                    text: total-weight + "%";
+                    font-weight: 700;
+                    font-size: 16px;
+                    color: (total-weight >= 99.9 && total-weight <= 100.1) ? #4caf50 : #f44336;
+                }
+                Rectangle { horizontal-stretch: 1; }
+                Button {
+                    text: "⚖️ Auto-Balance";
+                    enabled: tickers.length > 0;
+                    height: Theme.control-height;
+                    clicked => { auto-balance(); }
+                }
+            }
+
+            if validation-message != "": Text {
+                text: validation-message;
+                color: total-weight >= 99.9 && total-weight <= 100.1 ? #4caf50 : #ff9800;
+                font-weight: 600;
+                horizontal-alignment: center;
+            }
+
+            Button {
+                text: "🚀 Run Portfolio Simulation";
+                primary: true;
+                enabled: (total-weight >= 99.9 && total-weight <= 100.1) && tickers.length > 0;
+                height: Theme.control-height;
+                clicked => { run-simulation(); }
+            }
+        }
+    }
+}
+
+

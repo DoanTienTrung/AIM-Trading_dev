@@ -1,0 +1,177 @@
+import {
+    GroupBox, GridBox, ScrollView,
+    VerticalBox
+} from "std-widgets.slint";
+
+import { TickerStatsData } from "../monte_carlo_types.slint";
+import { Theme } from "../monte_carlo_theme.slint";
+
+export component TickerStatsPanel {
+    in property <TickerStatsData> stats;
+
+    Rectangle {
+        background: #2d3748; // Lighter background for better text contrast
+        border-radius: 8px;
+        vertical-stretch: 1;
+        horizontal-stretch: 1;
+
+        ScrollView {
+            vertical-stretch: 1;
+            VerticalBox {
+                spacing: 10px;
+                padding: 10px;
+
+            Text {
+                text: stats.symbol + " - Individual Ticker Analysis";
+                font-size: 18px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                color: Theme.primary-color;
+            }
+
+            // Configuration
+            GroupBox {
+                title: "Configuration";
+                GridBox {
+                    Row {
+                        Text { text: "Portfolio Weight:"; font-weight: 600; color: white; }
+                        Text { text: stats.weight + "%"; color: white; }
+                    }
+                    Row {
+                        Text { text: "Initial Price:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.initial-price; color: white; }
+                    }
+                    Row {
+                        Text { text: "Capital Allocated:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.capital-allocated; color: white; }
+                    }
+                    Row {
+                        Text { text: "Shares:"; font-weight: 600; color: white; }
+                        Text { text: stats.shares; color: white; }
+                    }
+                    Row {
+                        Text { text: "Model:"; font-weight: 600; color: white; }
+                        Text { text: stats.model-type; }
+                    }
+                    Row {
+                        Text { text: "Parameters:"; font-weight: 600; color: white; }
+                        Text { text: stats.model-params; wrap: word-wrap; color: white; }
+                    }
+                }
+            }
+
+            // Price statistics
+            GroupBox {
+                title: "═══ PRICE STATISTICS ═══";
+                GridBox {
+                    Row {
+                        Text { text: "Mean Final Price:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.mean-final-price; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Median Final Price:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.median-final-price; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Std Dev:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.std-dev; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Best Path:"; font-weight: 600; color: white; }
+                        Text {
+                            text: "$" + stats.best-price;
+                            color: #4caf50;
+                            font-weight: 700;
+                            font-size: 14px;
+                        }
+                    }
+                    Row {
+                        Text { text: "Worst Path:"; font-weight: 600; color: white; }
+                        Text {
+                            text: "$" + stats.worst-price;
+                            color: #f44336;
+                            font-weight: 700;
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+
+            // Stop loss analysis
+            if stats.stop-loss > 0: GroupBox {
+                title: "═══ STOP LOSS ANALYSIS ═══";
+                GridBox {
+                    Row {
+                        Text { text: "Stop Loss Price:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.stop-loss; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Probability of Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.prob-hit-sl + "%"; color: #ffa726; font-weight: 700; font-size: 14px; }
+                    }
+                    Row {
+                        Text { text: "Number of Paths Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.num-paths-hit-sl; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Avg Time to Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.avg-time-to-sl + " days"; font-size: 14px; color: white; }
+                    }
+                }
+            }
+
+            // Target analysis
+            if stats.target > 0: GroupBox {
+                title: "═══ TARGET ANALYSIS ═══";
+                GridBox {
+                    Row {
+                        Text { text: "Target Price:"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.target; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Probability of Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.prob-hit-target + "%"; color: #4caf50; font-weight: 700; font-size: 14px; }
+                    }
+                    Row {
+                        Text { text: "Number of Paths Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.num-paths-hit-target; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "Avg Time to Hit:"; font-weight: 600; color: white; }
+                        Text { text: stats.avg-time-to-target + " days"; font-size: 14px; color: white; }
+                    }
+                }
+            }
+
+            // Price distribution percentiles
+            GroupBox {
+                title: "═══ PRICE DISTRIBUTION ═══";
+                GridBox {
+                    Row {
+                        Text { text: "P5 (5th percentile):"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.p5; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "P25 (25th percentile):"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.p25; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "P50 (Median):"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.p50; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "P75 (75th percentile):"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.p75; font-size: 14px; color: white; }
+                    }
+                    Row {
+                        Text { text: "P95 (95th percentile):"; font-weight: 600; color: white; }
+                        Text { text: "$" + stats.p95; font-size: 14px; color: white; }
+                    }
+                }
+            }
+            }
+        }
+    }
+}
+
+

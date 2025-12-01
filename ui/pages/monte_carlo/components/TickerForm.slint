@@ -1,0 +1,146 @@
+import {
+    Button, ComboBox, SpinBox, CheckBox,
+    VerticalBox, HorizontalBox, LineEdit, GroupBox
+} from "std-widgets.slint";
+
+import { TickerFormData } from "../monte_carlo_types.slint";
+import { Theme } from "../monte_carlo_theme.slint";
+
+export component TickerForm {
+    in-out property <[string]> available-tickers;
+    in-out property <TickerFormData> form-data;
+    callback ticker-selected(string);
+    callback estimate-params();
+    callback add-ticker();
+
+    Rectangle {
+        border-radius: Theme.control-radius;
+        background: Theme.panel-background;
+        GroupBox {
+            VerticalBox {
+                spacing: 2px;
+                padding: 2px;
+                alignment: center;
+
+                
+                HorizontalBox {
+                    spacing: 8px;
+                    alignment: center;
+
+                    // Ticker
+                    VerticalBox {
+                        spacing: 1px;
+                        Text { text: "Ticker:"; font-size: 11px; color: Theme.text-muted; }
+                        ComboBox {
+                            model: available-tickers;
+                            current-value: form-data.ticker-name;
+                            selected(value) => {
+                                form-data.ticker-name = value;
+                                ticker-selected(value);
+                            }
+                            min-width: 140px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Price
+                    VerticalBox {
+                        spacing: 1px;
+                        Text { text: "Price ($):"; font-size: 11px; color: Theme.text-muted; }
+                        LineEdit {
+                            text: form-data.initial-price;
+                            edited(text) => { form-data.initial-price = text.to-float(); }
+                            placeholder-text: "150.00";
+                            min-width: 90px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Weight
+                    VerticalBox {
+                        spacing: 1px;
+                        Text { text: "Weight (%):"; font-size: 11px; color: Theme.text-muted; }
+                        SpinBox {
+                            value: form-data.weight;
+                            minimum: 0;
+                            maximum: 100;
+                            edited(value) => { form-data.weight = value; }
+                            min-width: 90px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Stop Loss
+                    VerticalBox {
+                        spacing: 1px;
+                        HorizontalBox {
+                            spacing: 3px;
+                            CheckBox {
+                                checked: form-data.enable-stop-loss;
+                                toggled => { form-data.enable-stop-loss = self.checked; }
+                            }
+                            Text { text: "Stop Loss ($):"; font-size: 11px; color: Theme.text-muted; }
+                        }
+                        LineEdit {
+                            enabled: form-data.enable-stop-loss;
+                            text: form-data.stop-loss;
+                            edited(text) => { form-data.stop-loss = text.to-float(); }
+                            placeholder-text: "135.00";
+                            min-width: 90px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Target
+                    VerticalBox {
+                        spacing: 1px;
+                        HorizontalBox {
+                            spacing: 3px;
+                            CheckBox {
+                                checked: form-data.enable-target;
+                                toggled => { form-data.enable-target = self.checked; }
+                            }
+                            Text { text: "Target ($):"; font-size: 11px; color: Theme.text-muted; }
+                        }
+                        LineEdit {
+                            enabled: form-data.enable-target;
+                            text: form-data.target;
+                            edited(text) => { form-data.target = text.to-float(); }
+                            placeholder-text: "180.00";
+                            min-width: 90px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Model
+                    VerticalBox {
+                        spacing: 2px;
+                        Text { text: "Model:"; font-size: 11px; color: Theme.text-muted; }
+                        ComboBox {
+                            model: ["GBM", "Bootstrap", "JumpDiffusion", "GARCH"];
+                            current-value: form-data.model-type;
+                            selected(value) => { form-data.model-type = value; }
+                            min-width: 140px;
+                            height: Theme.control-height;
+                        }
+                    }
+
+                    // Add Button
+                    VerticalBox {
+                        vertical-stretch: 1;
+                        Rectangle { vertical-stretch: 1; }
+                        Button {
+                            text: "➕ Add";
+                            primary: true;
+                            height: Theme.control-height;
+                            enabled: form-data.ticker-name != "" && form-data.weight > 0;
+                            clicked => { add-ticker(); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+

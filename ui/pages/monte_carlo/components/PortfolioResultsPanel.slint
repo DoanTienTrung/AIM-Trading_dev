@@ -1,0 +1,60 @@
+import {
+    Button, HorizontalBox, VerticalBox
+} from "std-widgets.slint";
+
+import { PortfolioStatsData, TickerStatsData } from "../monte_carlo_types.slint";
+import { PortfolioStatsPanel } from "./PortfolioStatsPanel.slint";
+import { TickerStatsPanel } from "./TickerStatsPanel.slint";
+import { Theme } from "../monte_carlo_theme.slint";
+
+export component PortfolioResultsPanel {
+    in property <PortfolioStatsData> portfolio-stats;
+    in property <[TickerStatsData]> ticker-stats;
+    in-out property <int> current-tab: 0;
+
+    Rectangle {
+        background: Theme.card-background;
+        border-radius: 8px;
+        vertical-stretch: 1;
+        horizontal-stretch: 1;
+
+        VerticalBox {
+            spacing: 5px;
+            vertical-stretch: 1;
+
+            // Tab buttons
+            HorizontalBox {
+                spacing: 5px;
+                padding: 5px;
+                Button {
+                    text: "📊 Portfolio Overview";
+                    primary: current-tab == 0;
+                    clicked => { current-tab = 0; }
+                    min-width: 150px;
+                }
+                for ticker[index] in ticker-stats: Button {
+                    text: ticker.symbol;
+                    primary: current-tab == (index + 1);
+                    clicked => { current-tab = index + 1; }
+                    min-width: 80px;
+                }
+            }
+
+            Rectangle { height: 2px; background: #444; }
+
+            // Tab content
+            if current-tab == 0: PortfolioStatsPanel {
+                stats: portfolio-stats;
+                vertical-stretch: 1;
+                horizontal-stretch: 1;
+            }
+            if current-tab > 0 && current-tab <= ticker-stats.length: TickerStatsPanel {
+                stats: ticker-stats[current-tab - 1];
+                vertical-stretch: 1;
+                horizontal-stretch: 1;
+            }
+        }
+    }
+}
+
+
