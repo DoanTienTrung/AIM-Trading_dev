@@ -1,0 +1,627 @@
+// ui/pages/monte_carlo/components/PortfolioAllocationTable.slint
+// Dynamic Portfolio Allocation Table with expandable rows
+
+import { VerticalBox, HorizontalBox, LineEdit, ScrollView } from "std-widgets.slint";
+
+// ==========================================
+// Portfolio Row Component (must be defined first)
+// ==========================================
+component PortfolioRow inherits Rectangle {
+    in property <int> row-index: 1;
+    in-out property <string> ticker-text: "";
+    in-out property <float> weight-value: 0;
+    in property <bool> is-more-row: false;
+
+    callback ticker-changed(int, string);
+    callback weight-changed(int, float);
+    callback search-ticker(int);
+    callback add-more-rows();
+
+    height: 40px;
+
+    HorizontalBox {
+        spacing: 15px;
+        padding-left: 10px;
+        padding-right: 10px;
+        alignment: center;
+
+        // ==========================================
+        // Label Column (with optional "More" button)
+        // ==========================================
+        HorizontalBox {
+            spacing: 5px;
+            width: 120px;
+            alignment: start;
+
+            Text {
+                text: "Ticker " + row-index;
+                font-size: 13px;
+                color: #f8f7f7;
+                vertical-alignment: center;
+            }
+
+            // Show "(More)" link if this is the last visible row
+            if is-more-row: TouchArea {
+                width: 50px;
+                height: 24px;
+
+                clicked => {
+                    // Trigger parent callback to add 2 more rows
+                    root.add-more-rows();
+                }
+
+                Rectangle {
+                    border-radius: 3px;
+                    background: ta.has-hover ? #e3f2fd : transparent;
+
+                    ta := TouchArea {
+                        Text {
+                            text: "(More)";
+                            font-size: 11px;
+                            color: #2196f3;
+                            vertical-alignment: center;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // Ticker Input Column
+        // ==========================================
+        Rectangle {
+            horizontal-stretch: 2;
+            border-width: 1px;
+            border-color: ticker-input.has-focus ? #2196f3 : #ccc;
+            border-radius: 4px;
+            height: 36px;
+            background: white;
+
+            HorizontalBox {
+                spacing: 8px;
+                padding-left: 10px;
+                padding-right: 5px;
+                alignment: center;
+
+                ticker-input := LineEdit {
+                    placeholder-text: "Enter ticker symbol";
+                    font-size: 13px;
+                    horizontal-stretch: 1;
+                    text <=> ticker-text;
+
+                    edited(text) => {
+                        root.ticker-changed(row-index - 1, text);
+                    }
+                }
+
+                TouchArea {
+                    width: 32px;
+                    height: 28px;
+
+                    clicked => {
+                        root.search-ticker(row-index - 1);
+                    }
+
+                    Rectangle {
+                        border-radius: 4px;
+                        background: search-touch.has-hover ? #f5f5f5 : transparent;
+
+                        search-touch := TouchArea {
+                            Text {
+                                text: "🔍";
+                                font-size: 14px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // Weight Input Column
+        // ==========================================
+        Rectangle {
+            width: 120px;
+            border-width: 1px;
+            border-color: weight-input.has-focus ? #2196f3 : #ccc;
+            border-radius: 4px;
+            height: 36px;
+            background: white;
+
+            HorizontalBox {
+                spacing: 5px;
+                padding-left: 10px;
+                padding-right: 10px;
+                alignment: center;
+
+                weight-input := LineEdit {
+                    font-size: 13px;
+                    horizontal-stretch: 1;
+                    input-type: decimal;
+                    text: weight-value == 0 ? "" : weight-value;
+                    horizontal-alignment: right;
+
+                    edited(text) => {
+                        root.weight-changed(row-index - 1, text.to-float());
+                    }
+                }
+
+                Text {
+                    text: "%";
+                    font-size: 13px;
+                    color: #666;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}
+
+export component PortfolioAllocationTable inherits Rectangle {
+    // ==========================================
+    // Properties for up to 20 tickers
+    // ==========================================
+    in-out property <int> visible-count: 2;  // Number of visible rows (start with 2)
+
+    // Ticker symbols
+    in-out property <string> ticker1: "";
+    in-out property <string> ticker2: "";
+    in-out property <string> ticker3: "";
+    in-out property <string> ticker4: "";
+    in-out property <string> ticker5: "";
+    in-out property <string> ticker6: "";
+    in-out property <string> ticker7: "";
+    in-out property <string> ticker8: "";
+    in-out property <string> ticker9: "";
+    in-out property <string> ticker10: "";
+    in-out property <string> ticker11: "";
+    in-out property <string> ticker12: "";
+    in-out property <string> ticker13: "";
+    in-out property <string> ticker14: "";
+    in-out property <string> ticker15: "";
+    in-out property <string> ticker16: "";
+    in-out property <string> ticker17: "";
+    in-out property <string> ticker18: "";
+    in-out property <string> ticker19: "";
+    in-out property <string> ticker20: "";
+
+    // Weights
+    in-out property <float> weight1: 0;
+    in-out property <float> weight2: 0;
+    in-out property <float> weight3: 0;
+    in-out property <float> weight4: 0;
+    in-out property <float> weight5: 0;
+    in-out property <float> weight6: 0;
+    in-out property <float> weight7: 0;
+    in-out property <float> weight8: 0;
+    in-out property <float> weight9: 0;
+    in-out property <float> weight10: 0;
+    in-out property <float> weight11: 0;
+    in-out property <float> weight12: 0;
+    in-out property <float> weight13: 0;
+    in-out property <float> weight14: 0;
+    in-out property <float> weight15: 0;
+    in-out property <float> weight16: 0;
+    in-out property <float> weight17: 0;
+    in-out property <float> weight18: 0;
+    in-out property <float> weight19: 0;
+    in-out property <float> weight20: 0;
+
+    // Computed properties
+    property <float> total-weight: weight1 + weight2 + weight3 + weight4 + weight5 +
+                                   weight6 + weight7 + weight8 + weight9 + weight10 +
+                                   weight11 + weight12 + weight13 + weight14 + weight15 +
+                                   weight16 + weight17 + weight18 + weight19 + weight20;
+
+    property <bool> is-valid: abs(total-weight - 100.0) < 0.01;
+    property <bool> can-add-more: visible-count < 20;
+
+    // Callbacks
+    callback ticker-changed(int, string);
+    callback weight-changed(int, float);
+    callback search-ticker(int);
+    callback add-more-rows();  // New callback for "More" click
+
+    // Layout
+    width: 100%;
+    min-height: 300px;
+
+    VerticalBox {
+        spacing: 8px;
+        padding: 0px;
+
+        // ==========================================
+        // Header Row
+        // ==========================================
+        HorizontalBox {
+            // spacing: 15px;
+            // padding-left: 10px;
+            // padding-right: 10px;
+            // height: 32px;
+
+            Text {
+                text: "Tên Tài Sản";
+                font-size: 12px;
+                font-weight: 600;
+                color: #666;
+                width: 120px;
+      
+            }
+
+            Text {
+                text: "Ticker symbol";
+                font-size: 12px;
+                font-weight: 600;
+                color: #666;
+                horizontal-stretch: 2;
+            }
+
+            Text {
+                text: "Tỷ trọng (%)";
+                font-size: 12px;
+                font-weight: 600;
+                color: #666;
+                width: 120px;
+            }
+        }
+
+        Rectangle {
+            height: 1px;
+            background: #ddd;
+        }
+
+        // ==========================================
+        // Scrollable Rows Container
+        // ==========================================
+        ScrollView {
+            min-height: 200px;
+            max-height: 500px;
+
+            VerticalBox {
+                spacing: 8px;
+
+                // ROW 1
+                if visible-count >= 1: PortfolioRow {
+                    row-index: 1;
+                    ticker-text <=> ticker1;
+                    weight-value <=> weight1;
+                    is-more-row: visible-count == 1 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 2
+                if visible-count >= 2: PortfolioRow {
+                    row-index: 2;
+                    ticker-text <=> ticker2;
+                    weight-value <=> weight2;
+                    is-more-row: visible-count == 2 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 3
+                if visible-count >= 3: PortfolioRow {
+                    row-index: 3;
+                    ticker-text <=> ticker3;
+                    weight-value <=> weight3;
+                    is-more-row: visible-count == 3 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 4
+                if visible-count >= 4: PortfolioRow {
+                    row-index: 4;
+                    ticker-text <=> ticker4;
+                    weight-value <=> weight4;
+                    is-more-row: visible-count == 4 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 5
+                if visible-count >= 5: PortfolioRow {
+                    row-index: 5;
+                    ticker-text <=> ticker5;
+                    weight-value <=> weight5;
+                    is-more-row: visible-count == 5 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 6
+                if visible-count >= 6: PortfolioRow {
+                    row-index: 6;
+                    ticker-text <=> ticker6;
+                    weight-value <=> weight6;
+                    is-more-row: visible-count == 6 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 7
+                if visible-count >= 7: PortfolioRow {
+                    row-index: 7;
+                    ticker-text <=> ticker7;
+                    weight-value <=> weight7;
+                    is-more-row: visible-count == 7 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 8
+                if visible-count >= 8: PortfolioRow {
+                    row-index: 8;
+                    ticker-text <=> ticker8;
+                    weight-value <=> weight8;
+                    is-more-row: visible-count == 8 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 9
+                if visible-count >= 9: PortfolioRow {
+                    row-index: 9;
+                    ticker-text <=> ticker9;
+                    weight-value <=> weight9;
+                    is-more-row: visible-count == 9 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 10
+                if visible-count >= 10: PortfolioRow {
+                    row-index: 10;
+                    ticker-text <=> ticker10;
+                    weight-value <=> weight10;
+                    is-more-row: visible-count == 10 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 11
+                if visible-count >= 11: PortfolioRow {
+                    row-index: 11;
+                    ticker-text <=> ticker11;
+                    weight-value <=> weight11;
+                    is-more-row: visible-count == 11 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 12
+                if visible-count >= 12: PortfolioRow {
+                    row-index: 12;
+                    ticker-text <=> ticker12;
+                    weight-value <=> weight12;
+                    is-more-row: visible-count == 12 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 13
+                if visible-count >= 13: PortfolioRow {
+                    row-index: 13;
+                    ticker-text <=> ticker13;
+                    weight-value <=> weight13;
+                    is-more-row: visible-count == 13 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 14
+                if visible-count >= 14: PortfolioRow {
+                    row-index: 14;
+                    ticker-text <=> ticker14;
+                    weight-value <=> weight14;
+                    is-more-row: visible-count == 14 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 15
+                if visible-count >= 15: PortfolioRow {
+                    row-index: 15;
+                    ticker-text <=> ticker15;
+                    weight-value <=> weight15;
+                    is-more-row: visible-count == 15 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 16
+                if visible-count >= 16: PortfolioRow {
+                    row-index: 16;
+                    ticker-text <=> ticker16;
+                    weight-value <=> weight16;
+                    is-more-row: visible-count == 16 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 17
+                if visible-count >= 17: PortfolioRow {
+                    row-index: 17;
+                    ticker-text <=> ticker17;
+                    weight-value <=> weight17;
+                    is-more-row: visible-count == 17 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 18
+                if visible-count >= 18: PortfolioRow {
+                    row-index: 18;
+                    ticker-text <=> ticker18;
+                    weight-value <=> weight18;
+                    is-more-row: visible-count == 18 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 19
+                if visible-count >= 19: PortfolioRow {
+                    row-index: 19;
+                    ticker-text <=> ticker19;
+                    weight-value <=> weight19;
+                    is-more-row: visible-count == 19 && can-add-more;
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+
+                // ROW 20
+                if visible-count >= 20: PortfolioRow {
+                    row-index: 20;
+                    ticker-text <=> ticker20;
+                    weight-value <=> weight20;
+                    is-more-row: false;  // Last row, no more button
+                    ticker-changed(idx, txt) => { root.ticker-changed(idx, txt); }
+                    weight-changed(idx, val) => { root.weight-changed(idx, val); }
+                    search-ticker(idx) => { root.search-ticker(idx); }
+                    add-more-rows() => { root.add-more-rows(); }
+                }
+            }
+        }
+
+        // ==========================================
+        // Separator
+        // ==========================================
+        Rectangle {
+            height: 1px;
+            background: #ddd;
+        }
+
+        // ==========================================
+        // Total Row
+        // ==========================================
+        HorizontalBox {
+            spacing: 15px;
+            padding-left: 10px;
+            padding-right: 10px;
+            height: 42px;
+
+            Text {
+                text: "Total:";
+                font-size: 14px;
+                font-weight: 700;
+                color: #333;
+                width: 120px;
+            }
+
+            // Empty space
+            Rectangle {
+                horizontal-stretch: 2;
+            }
+
+            // Total weight display
+            Rectangle {
+                width: 120px;
+                border-width: 2px;
+                border-color: root.is-valid ? #4caf50 : #f44336;
+                border-radius: 4px;
+                height: 38px;
+                background: root.is-valid ? #e8f5e9 : #ffebee;
+
+                HorizontalBox {
+                    spacing: 5px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    alignment: center;
+
+                    Text {
+                        text: round(root.total-weight * 10) / 10;
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: root.is-valid ? #4caf50 : #f44336;
+                        horizontal-alignment: right;
+                    }
+
+                    Text {
+                        text: "%";
+                        font-size: 13px;
+                        color: #666;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // Validation Message
+        // ==========================================
+        if !root.is-valid: HorizontalBox {
+            padding-left: 10px;
+            spacing: 8px;
+
+            Text {
+                text: "⚠️";
+                font-size: 14px;
+            }
+
+            Text {
+                text: "Total weight must equal 100%. Current: " + round(root.total-weight * 10) / 10 + "%";
+                font-size: 12px;
+                color: #f44336;
+            }
+        }
+
+        // Maximum reached message
+        if visible-count >= 20: HorizontalBox {
+            padding-left: 10px;
+            spacing: 8px;
+
+            Text {
+                text: "ℹ️";
+                font-size: 14px;
+            }
+
+            Text {
+                text: "Maximum 20 tickers reached";
+                font-size: 12px;
+                color: #666;
+            }
+        }
+    }
+}

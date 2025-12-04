@@ -1,14 +1,26 @@
 import {
-    Button, ComboBox, SpinBox, CheckBox,
-    VerticalBox, HorizontalBox, GroupBox,
-    GridBox, LineEdit, TabWidget, ScrollView
+    Button,
+    ComboBox,
+    SpinBox,
+    CheckBox,
+    VerticalBox,
+    HorizontalBox,
+    GroupBox,
+    GridBox,
+    LineEdit,
+    TabWidget,
+    ScrollView,
 } from "std-widgets.slint";
 
 import { Theme } from "monte_carlo_theme.slint";
 
 import {
-    SimParams, SimStats, TickerFormData, TickerItem,
-    PortfolioStatsData, TickerStatsData
+    SimParams,
+    SimStats,
+    TickerFormData,
+    TickerItem,
+    PortfolioStatsData,
+    TickerStatsData,
 } from "monte_carlo_types.slint";
 
 import { MonteCarloGlobal } from "monte_carlo_global.slint";
@@ -16,6 +28,9 @@ import { MonteCarloGlobal } from "monte_carlo_global.slint";
 import { PortfolioList } from "components/PortfolioList.slint";
 import { TickerForm } from "components/TickerForm.slint";
 import { PortfolioResultsPanel } from "components/PortfolioResultsPanel.slint";
+import {
+    PortfolioAllocationTable,
+} from "components/PortfolioAllocationTable.slint";  
 
 export component MonteCarloPage inherits Rectangle {
     min-width: 900px;
@@ -24,7 +39,6 @@ export component MonteCarloPage inherits Rectangle {
 
     // Mode selection: 0 = Single Ticker, 1 = Portfolio
     in-out property <int> current-mode: 0;
-
     in-out property <TickerFormData> portfolio-form <=> MonteCarloGlobal.portfolio-form;
     in-out property <[TickerItem]> portfolio-tickers <=> MonteCarloGlobal.portfolio-tickers;
     in-out property <float> portfolio-total-weight <=> MonteCarloGlobal.portfolio-total-weight;
@@ -32,7 +46,6 @@ export component MonteCarloPage inherits Rectangle {
     in-out property <PortfolioStatsData> portfolio-stats <=> MonteCarloGlobal.portfolio-stats;
     in-out property <[TickerStatsData]> ticker-stats-list <=> MonteCarloGlobal.ticker-stats-list;
     in-out property <int> portfolio-results-tab: 0;
-
     in-out property <[string]> ticker_list <=> MonteCarloGlobal.ticker-list;
     in-out property <string> selected_ticker <=> MonteCarloGlobal.selected-ticker;
     in-out property <string> date_range <=> MonteCarloGlobal.date-range;
@@ -45,222 +58,294 @@ export component MonteCarloPage inherits Rectangle {
     in-out property <int> seed: 12345;
     in-out property <bool> use_antithetic: true;
     in-out property <string> model_type: "GBM";
-
     in-out property <float> lambda: 2.0;
     in-out property <float> mu_j: -0.02;
     in-out property <float> sigma_j: 0.05;
     in-out property <float> omega: 0.00001;
     in-out property <float> alpha: 0.1;
     in-out property <float> beta: 0.85;
-
     in property <SimStats> stats <=> MonteCarloGlobal.stats;
     in-out property <image> price_chart <=> MonteCarloGlobal.price-chart;
     in-out property <image> hist_chart <=> MonteCarloGlobal.hist-chart;
     in-out property <string> exec_time <=> MonteCarloGlobal.exec-time;
 
-    // // Forward callbacks to global
-    // load_csv_pressed => { MonteCarloGlobal.load-csv-pressed(); }
-    // select_ticker_changed => { MonteCarloGlobal.select-ticker-changed(root.selected_ticker); }
-    // estimate_params_pressed => { MonteCarloGlobal.estimate-params-pressed(); }
-    // run_simulation_pressed => { MonteCarloGlobal.run-simulation-pressed(root.run_simulation_pressed); }
-    // export_summary_pressed => { MonteCarloGlobal.export-summary-pressed(); }
-    // export_charts_pressed => { MonteCarloGlobal.export-charts-pressed(); }
-    // save_setup_pressed => { MonteCarloGlobal.save-setup-pressed(); }
-    // load_setup_pressed => { MonteCarloGlobal.load-setup-pressed(); }
-    
-    // // Portfolio callbacks forward to global
-    // ticker_selected_for_portfolio => { MonteCarloGlobal.ticker-selected-for-portfolio(root.ticker_selected_for_portfolio); }
-    // estimate_params_for_portfolio => { MonteCarloGlobal.estimate-params-for-portfolio(); }
-    // add_ticker_to_portfolio => { MonteCarloGlobal.add-ticker-to-portfolio(); }
-    // update_ticker_field => { MonteCarloGlobal.update-ticker-field(root.update_ticker_field); }
-    // update_ticker_weight => { MonteCarloGlobal.update-ticker-weight(root.update_ticker_weight); }
-    // remove_ticker_from_portfolio => { MonteCarloGlobal.remove-ticker-from-portfolio(root.remove_ticker_from_portfolio); }
-    // auto_balance_portfolio => { MonteCarloGlobal.auto-balance-portfolio(); }
-    // run_portfolio_simulation => { MonteCarloGlobal.run-portfolio-simulation(); }
+    // Portfolio Allocation Table state
+    in-out property <int> portfolio-visible-count: 2;  // Start with 2 rows
+
 
     // Top mode switch
     VerticalBox {
         vertical-stretch: 0;
-        HorizontalBox {
-            padding: 8px;
-            spacing: 8px;
-            alignment: center;
-            vertical-stretch: 0;
-            Button {
-                text: "📊 Single Ticker";
-                primary: root.current-mode == 0;
-                clicked => { root.current-mode = 0; }
-                min-width: 160px;
-                height: Theme.control-height;
-            }
-            Button {
-                text: "📁 Portfolio";
-                primary: root.current-mode == 1;
-                clicked => { root.current-mode = 1; }
-                min-width: 160px;
-                height: Theme.control-height;
-            }
-        }
 
-        // --- Single ticker mode (copied, layout only) ---
-        if root.current-mode == 0: VerticalBox {
-            padding: 6px;
-            spacing: 6px;
-
-            Rectangle {
-                background: Theme.panel-background;
-                border-radius: Theme.control-radius;
-                VerticalBox {
-                    spacing: 2px;
-                    padding: 2px;
+        // --- Single ticker mode (refactored with scrollable full-screen sections) ---
+        if root.current-mode == 0: ScrollView {
+            VerticalBox {
+                spacing: 0px;  // Không có spacing giữa các section
+                padding: 0px;
+                Rectangle {
+                    height: root.height;  // Chiếm đúng 1 màn hình
+                    background: Theme.panel-background;
                     VerticalBox {
-                        spacing: 2px;
-                        padding: 2px;
+                        padding: 20px;
+                        spacing: 15px;
+                        alignment: center;
+                        
+                        // Title
+                        Text {
+                            text: "📊 Monte Carlo Simulation - Input Parameters";
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: Theme.text-primary;
+                            horizontal-alignment: center;
+                        }
 
-                        HorizontalBox {
-                            spacing: 4px;
-                           
-                            alignment: center;
+                        Rectangle {
+                            height: 10px;
+                        }
+                            // Sử dụng component
+                            PortfolioAllocationTable {
+                            // Bind visible-count to parent property
+                            visible-count <=> root.portfolio-visible-count;
 
-                            // Data input (load CSV + ticker)
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Ticker:"; font-size: 11px; color: Theme.text-muted; }
-                                HorizontalBox {
-                                    spacing: 2px;
-                                    Button {
-                                        text: "📂 Load CSV";
-                                        max-width: 90px;
-                                        height: Theme.control-height;
-                                        clicked => { MonteCarloGlobal.load-csv-pressed(); }
-                                    }
-                                    ComboBox {
-                                        model: root.ticker_list;
-                                        selected(current-value) => {
-                                            root.selected_ticker = current-value;
-                                            MonteCarloGlobal.select-ticker-changed(current-value);
-                                        }
-                                        min-width: 140px;
-                                        height: Theme.control-height;
-                                    }
-                                }
+                            // Handle ticker changed
+                            ticker-changed(index, ticker) => {
+                                debug("Asset", index, "ticker changed:", ticker);
+                                // TODO: Save to backend or validate ticker
                             }
 
-                            // Model selection
+                            // Handle weight changed
+                            weight-changed(index, weight) => {
+                                debug("Asset", index, "weight changed:", weight);
+                                // TODO: Save to backend or recalculate total
+                            }
+
+                            // Handle search ticker icon clicked
+                            search-ticker(index) => {
+                                debug("Search ticker for asset", index);
+                                // TODO: Open search popup/dialog
+                            }
+
+                            // Handle "More" button clicked
+                            add-more-rows() => {
+                                // Add 2 more rows (maximum 20)
+                                debug("More button clicked! Current count:", root.portfolio-visible-count);
+
+                                if (root.portfolio-visible-count < 20) {
+                                    root.portfolio-visible-count += 2;
+
+                                    // Cap at 20
+                                    if (root.portfolio-visible-count > 20) {
+                                        root.portfolio-visible-count = 20;
+                                    }
+
+                                    debug("Added 2 rows. New total:", root.portfolio-visible-count);
+                                } else {
+                                    debug("Maximum 20 tickers reached!");
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 20px;
+                        }  // Khoảng cách giữa bảng và form
+
                             VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Model:"; font-size: 11px; color: Theme.text-muted; }
+                            spacing: 40px;
+                            alignment: start;
+                            max-width: 600px;
+                            padding-left: 60px;
+                            padding-right: 60px;
+                                
+                                
+                                // Model
+                                HorizontalBox {
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Model:";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
+                                }
+
                                 ComboBox {
                                     model: ["GBM", "Bootstrap", "JumpDiffusion", "GARCH"];
-                                    selected => { root.model_type = self.current-value; }
-                                    min-width: 140px;
+                                    selected => {
+                                        root.model_type = self.current-value;
+                                    }
                                     height: Theme.control-height;
+                                    horizontal-stretch: 1;
+                                    width: 300px;
                                 }
                             }
+                                
+                                // Initial Price
+                                HorizontalBox {
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Initial Amount ($):";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
+                                }
 
-                            // Initial price
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Price ($):"; font-size: 11px; color: Theme.text-muted; }
-                                LineEdit {
-                                    text: root.initial_price;
-                                    edited(text) => { root.initial_price = text.to-float(); }
-                                    placeholder-text: "150.00";
-                                    min-width: 90px;
-                                    height: Theme.control-height;
+                                Rectangle {
+                                    border-radius: 4px;
+                                    background: #eef5ff;
+                                    width: 300px;
+                                    height: 30px;
+                                    TextInput {
+                                        text: "1000000";
+                                        height: 100%;
+                                        font-size: 14px;
+                                        input-type: text;
+                                        vertical-alignment: center;
+                                        horizontal-alignment: left;
+                                    }
                                 }
                             }
+                                
+                                HorizontalBox {
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Simualation Period:";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
+                                }
 
-                            // Horizon
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Horizon (days):"; font-size: 11px; color: Theme.text-muted; }
-                                SpinBox {
-                                    value <=> root.horizon;
-                                    min-width: 90px;
+                                ComboBox {
+                                    model: ["5", "10", "15", "20", "25", "30", "45", "50"];
+                                    // selected => {
+                                    //     root.model_type = self.current-value;
+                                    // }
                                     height: Theme.control-height;
+                                    horizontal-stretch: 1;
+                                    width: 300px;
                                 }
                             }
+                                
+                                // Paths
+                                HorizontalBox {
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Number Paths:";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
+                                }
 
-                            // Num paths
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Paths:"; font-size: 11px; color: Theme.text-muted; }
                                 SpinBox {
                                     value <=> root.num_paths;
                                     maximum: 100000;
                                     step-size: 100;
-                                    min-width: 90px;
                                     height: Theme.control-height;
+                                    horizontal-stretch: 1;
+                                    width: 300px;
                                 }
                             }
+                                
+                                // Seed
+                                HorizontalBox {
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Volatility Override:  :";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
+                                }
 
-                            // Seed
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
-                                Text { text: "Seed:"; font-size: 11px; color: Theme.text-muted; }
-                                SpinBox {
-                                    value <=> root.seed;
-                                    maximum: 100000;
-                                    min-width: 90px;
+                                ComboBox {
+                                    model: ["Auto", "Manual"];
+                                    // selected => {
+                                    //     root.model_type = self.current-value;
+                                    // }
                                     height: Theme.control-height;
+                                    horizontal-stretch: 1;
+                                    width: 300px;
                                 }
                             }
-
-                            // Save / load setup
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
+                                
+                                // Setup buttons
                                 HorizontalBox {
-                                    spacing: 3px;
-                                    Button {
-                                        text: "💾";
-                                        max-width: 40px;
-                                        height: Theme.control-height;
-                                        clicked => { MonteCarloGlobal.save_setup_pressed(); }
-                                    }
-                                    Button {
-                                        text: "📂";
-                                        max-width: 40px;
-                                        height: Theme.control-height;
-                                        clicked => { MonteCarloGlobal.load_setup_pressed(); }
-                                    }
+                                spacing: 25px;
+                                alignment: start;
+                                Text {
+                                    text: "Setup:";
+                                    font-size: 11px;
+                                    color: Theme.text-muted;
+                                    vertical-alignment: center;
+                                    width: 250px;
                                 }
-                            }
 
-                            // Antithetic checkbox
-                            VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
+                                Button {
+                                    text: "💾 Save";
+                                    height: Theme.control-height;
+                                    clicked => {
+                                        MonteCarloGlobal.save_setup_pressed();
+                                        
+                                    }
+                                    width: 125px;
+                                }
+
+                                Button {
+                                    text: "📂 Load";
+                                    height: Theme.control-height;
+                                    clicked => {
+                                        MonteCarloGlobal.load_setup_pressed();
+                                    }
+                                    width: 125px;
+                                }
+
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                }  // Spacer
+                                }
+                                
+                                // Antithetic Variates checkbox
                                 HorizontalBox {
-                                    spacing: 5px;
-                                    alignment: start;
-                                    CheckBox { checked <=> root.use_antithetic; }
-                                    Text {
-                                        text: "Use Antithetic Variates";
-                                        color: Theme.text-primary;
-                                        font-size: 11px;
-                                        vertical-alignment: center;
-                                    }
+                                spacing: 25px;
+                                alignment: start;
+                                Rectangle {
+                                    min-width: 120px;
+                                }  // Spacer để align với các field khác
+                                    
+                                    CheckBox {
+                                    checked <=> root.use_antithetic;
                                 }
-                            }
 
-                            // Run button
+                                Text {
+                                    text: "Use Antithetic Variates";
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    vertical-alignment: center;
+                                }
+
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                }  // Spacer
+                                }
+
                             VerticalBox {
-                                spacing: 1px;
-                                min-height: 50px;
+                                alignment: center;
+                                spacing: 100px;
+                                
                                 Button {
                                     text: "▶ Run Simulation";
                                     primary: true;
-                                    height: Theme.control-height;
+                                    height: 45px;
+                                    width: 220px;
                                     clicked => {
-                                       MonteCarloGlobal.run_simulation_pressed({
+                                        MonteCarloGlobal.run_simulation_pressed({
                                             initial_price: root.initial_price,
                                             horizon: root.horizon,
                                             num_paths: root.num_paths,
@@ -282,126 +367,358 @@ export component MonteCarloPage inherits Rectangle {
                             }
                         }
 
+                        // Spacer để đẩy nội dung lên trên
+                        Rectangle {
+                            vertical-stretch: 1;
+                        }
+
+                        // // Hint để scroll xuống
+                        // Text {
+                        //     text: "👇 Scroll down to view results";
+                        //     font-size: 12px;
+                        //     color: Theme.text-muted;
+                        //     horizontal-alignment: center;
+                        // }
                     }
                 }
-            }
 
-            // Charts + summary (co giãn theo chiều cao cửa sổ)
-            HorizontalBox {
-                spacing: 10px;
-                vertical-stretch: 1;
+                // ========================================
+                // 2️⃣ PRICE CHART SECTION - Full Screen
+                // ========================================
+                Rectangle {
+                    height: root.height;
+                    background: Theme.chart-background;
+                    VerticalBox {
+                        padding: 20px;
+                        spacing: 10px;
 
-                GroupBox {
-                    horizontal-stretch: 3;
-                    vertical-stretch: 1;
-                    Rectangle {
-                        background: Theme.chart-background;
-                        border-radius: 8px;
-                        TabWidget {
+                        // Title
+                        Text {
+                            text: "📈 Price Paths Simulation";
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: Theme.text-primary;
+                            horizontal-alignment: center;
+                        }
+
+                        // Chart container
+                        Rectangle {
+                            background: #1e1e1e;
+                            border-radius: 8px;
                             vertical-stretch: 1;
-                            Tab {
-                                title: "Price Paths";
-                                VerticalBox {
-                                    spacing: 10px;
-                                    padding: 5px;
-                                    Image {
-                                        source <=> root.price_chart;
-                                        image-fit: fill;
-                                        vertical-stretch: 1;
-                                    }
-                                }
+                            Image {
+                                source <=> root.price_chart;
+                                image-fit: contain;
+                                width: 100%;
+                                height: 100%;
                             }
-                            Tab {
-                                title: "Histogram";
-                                VerticalBox {
-                                    spacing: 10px;
-                                    padding: 5px;
-                                    Image {
-                                        source <=> root.hist_chart;
-                                        image-fit: fill;
-                                        vertical-stretch: 1;
-                                    }
-                                }
+                        }
+
+                        // Navigation hint
+                        HorizontalBox {
+                            spacing: 20px;
+                            alignment: center;
+                            Text {
+                                text: "👆 Scroll up for inputs";
+                                font-size: 12px;
+                                color: Theme.text-muted;
+                            }
+
+                            Text {
+                                text: "👇 Scroll down for histogram";
+                                font-size: 12px;
+                                color: Theme.text-muted;
                             }
                         }
                     }
                 }
 
-                // Right summary panel (copied)
-                GroupBox {
-                    horizontal-stretch: 1;
-                    vertical-stretch: 1;
+                // ========================================
+                // 3️⃣ HISTOGRAM SECTION - Full Screen
+                // ========================================
+                Rectangle {
+                    height: root.height;
+                    background: Theme.chart-background;
+                    VerticalBox {
+                        padding: 20px;
+                        spacing: 10px;
+
+                        // Title
+                        Text {
+                            text: "📊 Final Price Distribution (Histogram)";
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: Theme.text-primary;
+                            horizontal-alignment: center;
+                        }
+
+                        // Chart container
+                        Rectangle {
+                            background: #1e1e1e;
+                            border-radius: 8px;
+                            vertical-stretch: 1;
+                            Image {
+                                source <=> root.hist_chart;
+                                image-fit: contain;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+
+                        // Navigation hint
+                        HorizontalBox {
+                            spacing: 20px;
+                            alignment: center;
+                            Text {
+                                text: "👆 Scroll up for price paths";
+                                font-size: 12px;
+                                color: Theme.text-muted;
+                            }
+
+                            Text {
+                                text: "👇 Scroll down for statistics";
+                                font-size: 12px;
+                                color: Theme.text-muted;
+                            }
+                        }
+                    }
+                }
+
+                // ========================================
+                // 4️⃣ SUMMARY STATISTICS SECTION - Full Screen
+                // ========================================
+                Rectangle {
+                    min-height: root.height;
+                    background: Theme.panel-background;
                     ScrollView {
                         VerticalBox {
-                            spacing: 10px;
-                            padding: 10px;
-                            Text { text: "Statistical Summary"; font-weight: 600; color: #f7f5f5; }
+                            padding: 20px;
+                            spacing: 15px;
+
+                            // Title
+                            Text {
+                                text: "📊 Statistical Summary & Export";
+                                font-size: 20px;
+                                font-weight: 700;
+                                color: Theme.text-primary;
+                                horizontal-alignment: center;
+                            }
+
+                            Text {
+                                text: "Statistical Summary";
+                                font-weight: 600;
+                                color: #f7f5f5;
+                            }
+
                             GridBox {
-                                Row { Text { text: "Mean:"; color: #f7f5f5; }
-                                      Text { text: stats.mean; color: #f7f5f5; } }
-                                Row { Text { text: "Std Dev:"; color: #f7f5f5; }
-                                      Text { text: stats.std_dev; color: #f7f5f5; } }
-                                Row { Text { text: "Median (P50):"; color: #f7f5f5; }
-                                      Text { text: stats.median; color: #f7f5f5; } }
-                                Row { 
-                                    Text { text: "Sharpe Ratio:"; font-weight: 600; color: #f7f5f5; }
-                                    Text { 
-                                        text: stats.sharpe-ratio; 
+                                Row {
+                                    Text {
+                                        text: "Mean:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.mean;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "Std Dev:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.std_dev;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "Median (P50):";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.median;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "Sharpe Ratio:";
+                                        font-weight: 600;
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.sharpe-ratio;
                                         color: stats.sharpe-ratio > 1.0 ? #4caf50 : (stats.sharpe-ratio > 0.5 ? #ff9800 : #f44336);
                                         font-weight: 700;
                                         font-size: 14px;
                                     }
                                 }
-                                Row { 
-                                    Text { text: "Best Case:"; font-weight: 600; color: #f7f5f5; }
-                                    Text { 
-                                        text: stats.best-case; 
+
+                                Row {
+                                    Text {
+                                        text: "Best Case:";
+                                        font-weight: 600;
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.best-case;
                                         color: #4caf50;
                                         font-weight: 700;
                                         font-size: 14px;
                                     }
                                 }
-                                Row { 
-                                    Text { text: "Worst Case:"; font-weight: 600; color: #f7f5f5; }
-                                    Text { 
-                                        text: stats.worst-case; 
+
+                                Row {
+                                    Text {
+                                        text: "Worst Case:";
+                                        font-weight: 600;
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.worst-case;
                                         color: #f44336;
                                         font-weight: 700;
                                         font-size: 14px;
                                     }
                                 }
-                                Row { 
-                                    Text { text: "Max Drawdown:"; font-weight: 600; color: #f7f5f5; }
-                                    Text { 
-                                        text: (stats.max-drawdown * 100) + "%"; 
+
+                                Row {
+                                    Text {
+                                        text: "Max Drawdown:";
+                                        font-weight: 600;
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: (stats.max-drawdown * 100) + "%";
                                         color: #f44336;
                                         font-weight: 700;
                                         font-size: 14px;
                                     }
                                 }
-                                Row { Text { text: "P5:"; color: #f7f5f5; }
-                                      Text { text: stats.p5; color: #f7f5f5; } }
-                                Row { Text { text: "P25:"; color: #f7f5f5; }
-                                      Text { text: stats.p25; color: #f7f5f5; } }
-                                Row { Text { text: "P75:"; color: #f7f5f5; }
-                                      Text { text: stats.p75; color: #f7f5f5; } }
-                                Row { Text { text: "P95:"; color: #f7f5f5; }
-                                      Text { text: stats.p95; color: #f7f5f5; } }
-                                Row { Text { text: "VaR 95%:"; color: #f7f5f5; }
-                                      Text { text: stats.var95; color: #f7f5f5; } }
+
+                                Row {
+                                    Text {
+                                        text: "P5:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.p5;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "P25:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.p25;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "P75:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.p75;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "P95:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.p95;
+                                        color: #f7f5f5;
+                                    }
+                                }
+
+                                Row {
+                                    Text {
+                                        text: "VaR 95%:";
+                                        color: #f7f5f5;
+                                    }
+
+                                    Text {
+                                        text: stats.var95;
+                                        color: #f7f5f5;
+                                    }
+                                }
                             }
-                            Rectangle { height: 1px; background: #444; }
-                            Text { text: "Performance"; font-weight: 600; color: #f7f5f5; }
-                            Text { text: "Execution time: " + root.exec_time; color: #f7f5f5; }
-                            Rectangle { height: 1px; background: #444; }
-                            Text { text: "Export Options"; font-weight: 600; color: #f7f5f5; }
+
+                            Rectangle {
+                                height: 1px;
+                                background: #444;
+                            }
+
+                            Text {
+                                text: "Performance";
+                                font-weight: 600;
+                                color: #f7f5f5;
+                            }
+
+                            Text {
+                                text: "Execution time: " + root.exec_time;
+                                color: #f7f5f5;
+                            }
+
+                            Rectangle {
+                                height: 1px;
+                                background: #444;
+                            }
+
+                            Text {
+                                text: "Export Options";
+                                font-weight: 600;
+                                color: #f7f5f5;
+                            }
+
                             Button {
                                 text: "💾 Save Summary (CSV)";
-                                clicked => { MonteCarloGlobal.export_summary_pressed(); }
+                                clicked => {
+                                    MonteCarloGlobal.export_summary_pressed();
+                                }
                             }
+
                             Button {
                                 text: "📸 Save Charts (PNG)";
-                                clicked => { MonteCarloGlobal.export_charts_pressed(); }
+                                clicked => {
+                                    MonteCarloGlobal.export_charts_pressed();
+                                }
+                            }
+
+                            // Back to top hint
+                            Rectangle {
+                                height: 20px;
+                            }
+
+                            Text {
+                                text: "👆 Scroll to top";
+                                font-size: 12px;
+                                color: Theme.text-muted;
+                                horizontal-alignment: center;
                             }
                         }
                     }
@@ -413,21 +730,25 @@ export component MonteCarloPage inherits Rectangle {
         if root.current-mode == 1: VerticalBox {
             padding: 6px;
             spacing: 6px;
-
             TickerForm {
                 available-tickers: root.ticker_list;
                 form-data <=> root.portfolio-form;
                 vertical-stretch: 0;
                 max-height: 180px;
-                ticker-selected(ticker) => { MonteCarloGlobal.ticker_selected_for_portfolio(ticker); }
-                estimate-params => { MonteCarloGlobal.estimate_params_for_portfolio(); }
-                add-ticker => { MonteCarloGlobal.add_ticker_to_portfolio(); }
+                ticker-selected(ticker) => {
+                    MonteCarloGlobal.ticker_selected_for_portfolio(ticker);
+                }
+                estimate-params => {
+                    MonteCarloGlobal.estimate_params_for_portfolio();
+                }
+                add-ticker => {
+                    MonteCarloGlobal.add_ticker_to_portfolio();
+                }
             }
 
             HorizontalBox {
                 spacing: 10px;
                 vertical-stretch: 1;
-
                 PortfolioList {
                     tickers <=> root.portfolio-tickers;
                     total-weight <=> root.portfolio-total-weight;
@@ -440,15 +761,20 @@ export component MonteCarloPage inherits Rectangle {
                     update-ticker-weight(index, weight) => {
                         MonteCarloGlobal.update_ticker_weight(index, weight);
                     }
-                    remove-ticker(index) => { MonteCarloGlobal.remove_ticker_from_portfolio(index); }
-                    auto-balance => { MonteCarloGlobal.auto_balance_portfolio(); }
-                    run-simulation => { MonteCarloGlobal.run_portfolio_simulation(); }
+                    remove-ticker(index) => {
+                        MonteCarloGlobal.remove_ticker_from_portfolio(index);
+                    }
+                    auto-balance => {
+                        MonteCarloGlobal.auto_balance_portfolio();
+                    }
+                    run-simulation => {
+                        MonteCarloGlobal.run_portfolio_simulation();
+                    }
                 }
 
                 VerticalBox {
                     horizontal-stretch: 1;
                     vertical-stretch: 1;
-
                     if root.portfolio-stats.paths > 0: GroupBox {
                         vertical-stretch: 1;
                         PortfolioResultsPanel {
@@ -459,7 +785,6 @@ export component MonteCarloPage inherits Rectangle {
                             horizontal-stretch: 1;
                         }
                     }
-
                     if root.portfolio-stats.paths == 0: GroupBox {
                         vertical-stretch: 1;
                         VerticalBox {
@@ -472,6 +797,7 @@ export component MonteCarloPage inherits Rectangle {
                                 color: #2196f3;
                                 horizontal-alignment: center;
                             }
+
                             Text {
                                 text: "Build your portfolio and run simulation to see results here.";
                                 font-size: 14px;
@@ -485,7 +811,4 @@ export component MonteCarloPage inherits Rectangle {
             }
         }
     }
-
 }
-
-
